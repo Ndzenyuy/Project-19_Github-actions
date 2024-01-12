@@ -2,6 +2,12 @@ name: github Actions
 on: workflow_dispatch
 env: 
   AWS_REGION: us-east-2
+  ECR_REPOSITORY: rhenaapp
+  ECS_SERVICE: rhenaapp-svc
+  ECS_CLUSTER: rhena-appl
+  ECS_TASK_DEFINITION: aws-files/taskdeffile.json
+  CONTAINER_NAME: rhenaapp
+  
 jobs: 
   Testing:
     runs-on: ubuntu-latest
@@ -74,4 +80,11 @@ jobs:
           daemon_off: false
           dockerfile: ./Dockerfile
           context: ./
-      
+  
+  BUILD_AND_PUBLISH:
+    needs: Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+        
