@@ -452,3 +452,107 @@ jobs:
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
 ```
+Copy the LJSON content of the task definition and paste it in the file <project-folder>/aws-files/taskdeffile.json.
+```json
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-east-2:138380002982:task-definition/rhenaapp:8",
+    "containerDefinitions": [
+        {
+            "name": "rhenaapp",
+            "image": "138380002982.dkr.ecr.us-east-2.amazonaws.com/rhenaapp:22",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "rhenaapp-8080-tcp",
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/rhenaapp",
+                    "awslogs-region": "us-east-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+    "family": "rhenaapp",
+    "executionRoleArn": "arn:aws:iam::138380002982:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 8,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2024-01-13T06:00:04.322Z",
+    "registeredBy": "arn:aws:iam::138380002982:user/Jones",
+    "tags": [
+        {
+            "key": "Name ",
+            "value": "Rhenaapp-tdef"
+        }
+    ]
+}
+```
+
+- Now edit the different variables to match those you gave in your setup. When pushed, the workflow should be triggered which, if successfull should have the following
+![successful build of whole project]()
+
+- Now edit the security group of the data base to accept inbound transfer of MySQL traffic from the security group of the ECS service.
+
+Back to our web page, login with the following credentials
+```
+username: admin_vp
+password: admin_vp
+```
+if the database is successfully connected, you should obtain a successful login into the web app.
+![successful login]()
+
+# Congratulations, you just deployed a webapp using GitHub actions
