@@ -301,6 +301,14 @@ Once the image is in ECR, we need to setup ECS to pick this image and deploy it.
    image URI: <paste the image uri from ECR> : leave the rest as defaults
    
  ```
+![task definition creation success]()
+
+Now click on the task execution role which will lead you to IAM
+![ecs taskexecution role iam]()
+
+Now we need to add cloudwatch logs full access to the role
+ -> Add permissions -> Attach policies -> cloudwatchLogsFullAccess -> add permissions
+  
 
 Back to clusters, create a service
 ```
@@ -309,19 +317,138 @@ Deployment configuration:
   - service name: rhenaapp-svc
 Deployment failue detection
   - Use the Amazon ECS deployment circuit breaker = false(uncheck)
+Networking:
+  - Security group: create new
+    -> name: rhenaapp-sg
+    -> inbound rules: HTTP from anywhere, 8080 from anywhere
+  
 Load balancing:
   - Application load balancer -> name: rhenaapplb
   - healthcheck grace period: 30s
-  - listener: create new listener -> port 8080
+  - listener: create new listener -> port 80
   - Create new target group:
      name: rhenaapp-tg
      healthcheck path: /login
 ```
+![successful deployment ecs]()
+
+Now copy the DNS address of the ALB and paste it on the browser, we should have a login page of the app running in ECS
+![access via dns]()
+
 ## Deploy
 
+The last job will be to deploy the latest version of the app each time the workflow runs. Replace the main.yaml code with the following
+```yml
+name: github Actions
+on: [push, workflow_dispatch]
+env: 
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: rhenaapp
+  ECS_SERVICE: rhenaapp-svc
+  ECS_CLUSTER: rhena-appl
+  ECS_TASK_DEFINITION: aws-files/taskdeffile.json
+  CONTAINER_NAME: rhenaapp
+  
+jobs: 
+  Testing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Testing workflow
+        uses: actions/checkout@v4
 
+      - name: Maven test
+        run: mvn test
+      
+      - name: Checkstyle
+        run: mvn checkstyle:checkstyle
 
-Then look for the file :
-- /src/main/resources/db_backup.sql
-- db_backup.sql file is a mysql dump file.we have to import this dump to mysql db server
-- > mysql -u <user_name> -p accounts < db_backup.sql
+# Setup java 11 to be default (sonar-scanner requirement as of 5.x)
+      - name: Set Java 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '11'
+
+      # Setup sonar-scanner
+      - name: Setup SonarQube
+        uses: warchant/setup-sonar-scanner@v7
+
+      # Run sonar-scanner
+      - name: SonarQube Scan
+        run: sonar-scanner
+          -Dsonar.host.url=${{ secrets.SONAR_URL }}
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.sources=src/
+          -Dsonar.junit.reportsPath=target/surefire-reports/ 
+          -Dsonar.jacoco.reportsPath=target/jacoco.exec 
+          -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
+          -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/
+
+              # Check the Quality Gate status.
+      - name: SonarQube Quality Gate check
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+      # Force to fail step after specific time.
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_URL }} #OPTIONAL 
+
+  BUILD_AND_PUBLISH:
+    needs: Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
+      - name: Update application.properties file
+        run: |
+          sed -i "s/^jdbc.username.*$/jdbc.username\=${{ secrets.RDS_USER }}/" src/main/resources/application.properties
+          sed -i "s/^jdbc.password.*$/jdbc.password\=${{ secrets.RDS_PASS }}/" src/main/resources/application.properties
+          sed -i "s/db01/${{ secrets.RDS_ENDPOINT }}/" src/main/resources/application.properties
+
+      - name: Build & Upload image to ECR
+        uses: appleboy/docker-ecr-action@master
+        with:
+          access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          registry: ${{ secrets.REGISTRY }}
+          repo: rhenaapp
+          region: ${{ env.AWS_REGION }}
+          tags: latest,${{ github.run_number }}
+          daemon_off: false
+          dockerfile: ./Dockerfile
+          context: ./
+
+  Deploy:
+    needs: BUILD_AND_PUBLISH
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.run_number }}
+      
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+```
