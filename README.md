@@ -12,7 +12,7 @@ In this project, we will build step by step a CICD pipeline using Github Actions
 - JSP
 - MySQL
 ## Project Architecture
-![](architecture)
+![](https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/gitactions.jpg)
 
 ## Build the project
 ### Github setup
@@ -58,15 +58,15 @@ git commit "testing workflow"
 git push
 ```
 Now to GitHub -> Actions -> CICD-with-GitActions -> run workflow -> branch name: main, run workflow. Now you'll have been sure that the workflow works smoothly
-![](workflow-test)
-![](workflow-test2)
+![](https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/completed%20workflow%20test.png)
+![]( https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/completed%20workflow%20test2.png)
 
 ### Sonarcloud setup
 Create an account in [SonarCloud](https://www.sonarcloud.io) and link it to your github -> Create a new organization
 
 - Create an organization manually
 - Organization name: rhena (or give any random number after it if Rhena isn't valid) -> create organization
-  ![Creating an organization]()
+  ![Creating an organization](https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/creating%20organization.png)
 - Analyse new project in the next window
   ```
   Display name: app
@@ -75,11 +75,11 @@ Create an account in [SonarCloud](https://www.sonarcloud.io) and link it to your
   ```
 - Choose analysis method: Github actions
 - Copy the sonar token to a sticky note
-  ![Sonar token]()
+  ![Sonar token]( https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/sonar%20token.png)
 - Create a quality gate
   
     Under organizations select Rhena -> Quality gates -> Create -> Name: actionsQG
-    ![Creating quality gate]()
+    ![Creating quality gate]( https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/create%20quality%20gate.png)
     Add conditions -> Where?: overall code -> Quality gate fails when: Bugs -> Operator: is greater than, Value 35
     Projects: rhena_app
   
@@ -143,7 +143,7 @@ Create an account in [SonarCloud](https://www.sonarcloud.io) and link it to your
             SONAR_HOST_URL: ${{ secrets.SONAR_URL }} #OPTIONAL 
 ```
 Now push to code to Github which will automatically trigger the workflow. When the workflow ends, in sonarcloud, the report of the analysis will be available
-![sonar scan report]()
+![sonar scan report]( https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/sonar%20scan%20report.png )
 
 ## AWS IAM, ECR and RDS Setup
 ### AWS IAM
@@ -157,7 +157,7 @@ Now push to code to Github which will automatically trigger the workflow. When t
   - Create a new private repository in ECR
   - Create repository -> name: rhenaapp -> create
   - Copy repository URI of the form xxxxxxxxx.dkr.ecr.us-east-2.amazonaws.com and store in sticky notes
-    ![Created Repository in ECR]()
+    ![Created Repository in ECR](https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/created%20repository.png)
 ### RDS
   - Create a mysql database in RDS
     ```
