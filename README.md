@@ -301,10 +301,9 @@ Once the image is in ECR, we need to setup ECS to pick this image and deploy it.
    image URI: <paste the image uri from ECR> : leave the rest as defaults
    
  ```
-![task definition creation success]()
-
+![]( https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/task%20definition%20creation%20success.png)
 Now click on the task execution role which will lead you to IAM
-![ecs taskexecution role iam]()
+![task definition creation success](https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/successful%20created%20service.png)
 
 Now we need to add cloudwatch logs full access to the role
  -> Add permissions -> Attach policies -> cloudwatchLogsFullAccess -> add permissions
@@ -330,10 +329,10 @@ Load balancing:
      name: rhenaapp-tg
      healthcheck path: /login
 ```
-![successful deployment ecs]()
+![successful deployment ecs]( https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/successful%20create%20in%20ecs.png)
 
 Now copy the DNS address of the ALB and paste it on the browser, we should have a login page of the app running in ECS
-![access via dns]()
+![access via dns]( https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/access%20via%20alb%20dns.png)
 
 ## Deploy
 
@@ -452,7 +451,7 @@ jobs:
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
 ```
-Copy the LJSON content of the task definition and paste it in the file <project-folder>/aws-files/taskdeffile.json.
+Copy the JSON content of the task definition and paste it in the file <project-folder>/aws-files/taskdeffile.json.
 ```json
 {
     "taskDefinitionArn": "arn:aws:ecs:us-east-2:138380002982:task-definition/rhenaapp:8",
@@ -543,7 +542,7 @@ Copy the LJSON content of the task definition and paste it in the file <project-
 ```
 
 - Now edit the different variables to match those you gave in your setup. When pushed, the workflow should be triggered which, if successfull should have the following
-![successful build of whole project]()
+![successful build of whole project]( https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/successful%20build%20whole%20project.png)
 
 - Now edit the security group of the data base to accept inbound transfer of MySQL traffic from the security group of the ECS service.
 
@@ -553,6 +552,6 @@ username: admin_vp
 password: admin_vp
 ```
 if the database is successfully connected, you should obtain a successful login into the web app.
-![successful login]()
+![successful login](https://github.com/Ndzenyuy/Project-20_Github-actions/blob/main/images/login%20successful.png)
 
 # Congratulations, you just deployed a webapp using GitHub actions
