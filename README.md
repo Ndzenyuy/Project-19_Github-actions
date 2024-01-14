@@ -1,4 +1,4 @@
-# Project 20: CICD with Github Actions
+# Project 19: CICD with Github Actions
 In this project, we will build step by step a CICD pipeline using Github Actions. This project builds and deploys an App(Rhena App) with DevSecOps best practices in three steps: 
  - Runs necessary code tests(maven, checkstyle, junit, jacoco and quality gates);
  - Builds a docker image and stores in ECR; and finaly
