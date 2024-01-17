@@ -69,6 +69,7 @@ jobs:
           sed -i "s/db01/${{ secrets.RDS_ENDPOINT }}/" src/main/resources/application.properties
 
       - name: Build & Upload image to ECR
+        id: build
         uses: appleboy/docker-ecr-action@master
         with:
           access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -80,11 +81,15 @@ jobs:
           daemon_off: false
           dockerfile: ./Dockerfile
           context: ./
-      
+
+      - name: Build an image from Dockerfile
+        run: |
+          docker build -t docker.io/ndzenyuy/rhenaapp:${{ github.sha }} .
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ secrets.REGISTRY }}/rhenaapp1:latest,${{ github.run_number }}'
+          image-ref: 'docker.io/ndzenyuy/rhenaapp:${{ github.sha }}'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
