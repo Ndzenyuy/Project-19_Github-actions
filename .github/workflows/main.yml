@@ -73,8 +73,8 @@ jobs:
         with:
           access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          registry: ${{ env.REGISTRY }}
-          repo: rhenaapp
+          registry: ${{ secrets.REGISTRY }}
+          repo: rhenaapp1
           region: ${{ env.AWS_REGION }}
           tags: latest,${{ github.run_number }}
           daemon_off: false
