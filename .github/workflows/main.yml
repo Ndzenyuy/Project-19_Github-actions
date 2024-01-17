@@ -86,7 +86,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ secrets.REGISTRY }}/rhenaapp1:latest,${{ github.run_number }}'
+          image-ref: '${{ secrets.REGISTRY }}/rhenaapp1'
           format: 'sarif'
           output: 'trivy-results.sarif'
         env:
