@@ -68,6 +68,7 @@ jobs:
           sed -i "s/^jdbc.password.*$/jdbc.password\=${{ secrets.RDS_PASS }}/" src/main/resources/application.properties
           sed -i "s/db01/${{ secrets.RDS_ENDPOINT }}/" src/main/resources/application.properties
 
+
       - name: Build & Upload image to ECR
         id: build
         uses: appleboy/docker-ecr-action@master
@@ -82,17 +83,21 @@ jobs:
           dockerfile: ./Dockerfile
           context: ./
 
-      - name: Build an image from Dockerfile
-        run: |
-          docker build -t docker.io/ndzenyuy/rhenaapp:${{ github.sha }} .
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'docker.io/ndzenyuy/rhenaapp:${{ github.sha }}'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os'
-          severity: 'CRITICAL,HIGH'
+          image-ref: '${{ secrets.REGISTRY }}/rhenaapp1:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      
 
